@@ -40,6 +40,7 @@
 #pragma warning (pop)
 #include <stdio.h>
 #include <time.h>
+#include <sys/timeb.h>
 #include <stdint.h>
 #include <assert.h>
 
@@ -214,11 +215,11 @@ static PdhLookupPerfNameByIndexFunc PdhLookupPerfNameByIndex_i;
  * Struct for PDH queries.
  */
 typedef struct {
-    HQUERY      query;
-    uint64_t    lastUpdate; // Last time query was updated (ticks)
+    HQUERY          query;
+    struct _timeb   lastUpdate; // Last time query was updated
 } UpdateQueryS, *UpdateQueryP;
 
-// Min time between query updates (ticks)
+// Min time between query updates (millis)
 static const int MIN_UPDATE_INTERVAL = 500;
 
 /*
@@ -993,7 +994,8 @@ bindPdhFunctionPointers(HMODULE h) {
  */
 static int
 getPerformanceData(UpdateQueryP query, HCOUNTER c, PDH_FMT_COUNTERVALUE* value, DWORD format) {
-    clock_t now = clock();
+    struct _timeb now;
+    _ftime(&now);
 
     /*
      * Need to limit how often we update the query
@@ -1003,7 +1005,9 @@ getPerformanceData(UpdateQueryP query, HCOUNTER c, PDH_FMT_COUNTERVALUE* value, 
      * store and use values from two consecutive updates,
      * like cpu load.)
      */
-    if (now - query->lastUpdate > MIN_UPDATE_INTERVAL) {
+    int elapsed = (int) (1000.0 * (now.time - query->lastUpdate.time)
+            + (now.millitm - query->lastUpdate.millitm));
+    if (elapsed < 0 || elapsed > MIN_UPDATE_INTERVAL) {
         if (PdhCollectQueryData_i(query->query) != ERROR_SUCCESS) {
             return -1;
         }
