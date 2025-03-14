@@ -29,7 +29,10 @@ Create new WSL instance to build in
     ❯ sudo apt-get upgrade 
     ❯ sudo apt-get install build-essential autoconf zip unzip
 
-Install Visual Studio 2022 Community Edition from https://visualstudio.microsoft.com/downloads/
+Install Visual Studio 2022 Community Edition (on Windows) from https://visualstudio.microsoft.com/downloads/
+
+Install a JDK on Windows (this has to be "close enough" to the version of JDK you intend to build). 
+The instructions below assume the JDK is installed in `C:\jdk\jdk17.0.12_7`.
 
 Prepare and build JDK from WSL
 
